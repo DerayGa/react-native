@@ -13,13 +13,17 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import com.facebook.react.animation.Animation;
 import com.facebook.react.animation.AnimationRegistry;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.SoftAssertions;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.debug.NotThreadSafeViewHierarchyUpdateDebugListener;
 import com.facebook.systrace.Systrace;
 import com.facebook.systrace.SystraceMessage;
@@ -140,25 +144,6 @@ public class UIViewOperationQueue {
           mTag,
           mClassName,
           mInitialProps);
-    }
-  }
-
-  private final class DropViewsOperation extends ViewOperation {
-
-    private final int[] mViewTagsToDrop;
-    private final int mArrayLength;
-
-    public DropViewsOperation(int[] viewTagsToDrop, int length) {
-      super(-1);
-      mViewTagsToDrop = viewTagsToDrop;
-      mArrayLength = length;
-    }
-
-    @Override
-    public void execute() {
-      for (int i = 0; i < mArrayLength; i++) {
-        mNativeViewHierarchyManager.dropView(mViewTagsToDrop[i]);
-      }
     }
   }
 
@@ -448,6 +433,7 @@ public class UIViewOperationQueue {
 
   private final Object mDispatchRunnablesLock = new Object();
   private final DispatchUIFrameCallback mDispatchUIFrameCallback;
+  private final ReactApplicationContext mReactApplicationContext;
 
   @GuardedBy("mDispatchRunnablesLock")
   private final ArrayList<Runnable> mDispatchUIRunnables = new ArrayList<>();
@@ -456,11 +442,11 @@ public class UIViewOperationQueue {
 
   /* package */ UIViewOperationQueue(
       ReactApplicationContext reactContext,
-      NativeViewHierarchyManager nativeViewHierarchyManager,
-      AnimationRegistry animationRegistry) {
+      NativeViewHierarchyManager nativeViewHierarchyManager) {
     mNativeViewHierarchyManager = nativeViewHierarchyManager;
-    mAnimationRegistry = animationRegistry;
+    mAnimationRegistry = nativeViewHierarchyManager.getAnimationRegistry();
     mDispatchUIFrameCallback = new DispatchUIFrameCallback(reactContext);
+    mReactApplicationContext = reactContext;
   }
 
   public void setViewHierarchyUpdateDebugListener(
@@ -470,6 +456,32 @@ public class UIViewOperationQueue {
 
   public boolean isEmpty() {
     return mOperations.isEmpty();
+  }
+
+  public void addRootView(
+      final int tag,
+      final SizeMonitoringFrameLayout rootView,
+      final ThemedReactContext themedRootContext) {
+    if (UiThreadUtil.isOnUiThread()) {
+      mNativeViewHierarchyManager.addRootView(tag, rootView, themedRootContext);
+    } else {
+      final Semaphore semaphore = new Semaphore(0);
+      mReactApplicationContext.runOnUiQueueThread(
+          new Runnable() {
+            @Override
+            public void run() {
+              mNativeViewHierarchyManager.addRootView(tag, rootView, themedRootContext);
+              semaphore.release();
+            }
+          });
+      try {
+        SoftAssertions.assertCondition(
+            semaphore.tryAcquire(5000, TimeUnit.MILLISECONDS),
+            "Timed out adding root view");
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   public void enqueueRemoveRootView(int rootViewTag) {
@@ -523,10 +535,6 @@ public class UIViewOperationQueue {
             viewReactTag,
             viewClassName,
             initialProps));
-  }
-
-  public void enqueueDropViews(int[] viewTagsToDrop, int length) {
-    mOperations.add(new DropViewsOperation(viewTagsToDrop, length));
   }
 
   public void enqueueUpdateProperties(int reactTag, String className, CatalystStylesDiffMap props) {

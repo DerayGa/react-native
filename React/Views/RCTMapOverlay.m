@@ -7,10 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-#import <Foundation/Foundation.h>
+#import "RCTMapOverlay.h"
 
-@interface RCTModuleMap : NSDictionary
-
-- (instancetype)initWithDictionary:(NSDictionary *)modulesByName NS_DESIGNATED_INITIALIZER;
+@implementation RCTMapOverlay
 
 @end

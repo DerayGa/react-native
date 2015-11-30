@@ -30,6 +30,13 @@ NSString *const RCTProfileDidEndProfiling = @"RCTProfileDidEndProfiling";
 
 #if RCT_DEV
 
+@interface RCTBridge ()
+
+- (void)dispatchBlock:(dispatch_block_t)block
+                queue:(dispatch_queue_t)queue;
+
+@end
+
 #pragma mark - Constants
 
 NSString const *RCTProfileTraceEvents = @"traceEvents";
@@ -41,7 +48,6 @@ NSString *const RCTProfilePrefix = @"rct_profile_";
 // This is actually a BOOL - but has to be compatible with OSAtomic
 static volatile uint32_t RCTProfileProfiling;
 
-static BOOL RCTProfileHookedModules;
 static NSDictionary *RCTProfileInfo;
 static NSMutableDictionary *RCTProfileOngoingEvents;
 static NSTimeInterval RCTProfileStartTime;
@@ -203,19 +209,21 @@ void RCTProfileHookModules(RCTBridge *bridge)
 {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wtautological-pointer-compare"
-  if (RCTProfileTrampoline == NULL || RCTProfileHookedModules) {
+  if (RCTProfileTrampoline == NULL) {
     return;
   }
 #pragma clang diagnostic pop
 
-  RCTProfileHookedModules = YES;
-
   for (RCTModuleData *moduleData in [bridge valueForKey:@"moduleDataByID"]) {
-    [moduleData dispatchBlock:^{
+    [bridge dispatchBlock:^{
       Class moduleClass = moduleData.moduleClass;
       Class proxyClass = objc_allocateClassPair(moduleClass, RCTProfileProxyClassName(moduleClass), 0);
 
       if (!proxyClass) {
+        proxyClass = objc_getClass(RCTProfileProxyClassName(moduleClass));
+        if (proxyClass) {
+          object_setClass(moduleData.instance, proxyClass);
+        }
         return;
       }
 
@@ -242,25 +250,18 @@ void RCTProfileHookModules(RCTBridge *bridge)
 
       objc_registerClassPair(proxyClass);
       object_setClass(moduleData.instance, proxyClass);
-    }];
+    } queue:moduleData.methodQueue];
   }
 }
 
 void RCTProfileUnhookModules(RCTBridge *bridge)
 {
-  if (!RCTProfileHookedModules) {
-    return;
-  }
-
-  RCTProfileHookedModules = NO;
-
   dispatch_group_enter(RCTProfileGetUnhookGroup());
 
   for (RCTModuleData *moduleData in [bridge valueForKey:@"moduleDataByID"]) {
     Class proxyClass = object_getClass(moduleData.instance);
     if (moduleData.moduleClass != proxyClass) {
       object_setClass(moduleData.instance, moduleData.moduleClass);
-      objc_disposeClassPair(proxyClass);
     }
   }
 

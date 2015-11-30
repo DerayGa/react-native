@@ -7,13 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-#import <MapKit/MapKit.h>
+#import "RCTMapAnnotation.h"
 
-@interface RCTPointAnnotation : MKPointAnnotation <MKAnnotation>
-
-@property (nonatomic, copy) NSString *identifier;
-@property (nonatomic, assign) BOOL hasLeftCallout;
-@property (nonatomic, assign) BOOL hasRightCallout;
-@property (nonatomic, assign) BOOL animateDrop;
+@implementation RCTMapAnnotation
 
 @end
