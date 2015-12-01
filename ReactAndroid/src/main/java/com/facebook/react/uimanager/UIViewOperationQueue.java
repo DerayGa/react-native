@@ -46,7 +46,7 @@ public class UIViewOperationQueue {
   /**
    * A mutation or animation operation on the view hierarchy.
    */
-  private interface UIOperation {
+  protected interface UIOperation {
 
     void execute();
   }
@@ -122,17 +122,17 @@ public class UIViewOperationQueue {
 
   private final class CreateViewOperation extends ViewOperation {
 
-    private final int mRootViewTagForContext;
+    private final ThemedReactContext mThemedContext;
     private final String mClassName;
     private final @Nullable CatalystStylesDiffMap mInitialProps;
 
     public CreateViewOperation(
-        int rootViewTagForContext,
+        ThemedReactContext themedContext,
         int tag,
         String className,
         @Nullable CatalystStylesDiffMap initialProps) {
       super(tag);
-      mRootViewTagForContext = rootViewTagForContext;
+      mThemedContext = themedContext;
       mClassName = className;
       mInitialProps = initialProps;
     }
@@ -140,7 +140,7 @@ public class UIViewOperationQueue {
     @Override
     public void execute() {
       mNativeViewHierarchyManager.createView(
-          mRootViewTagForContext,
+          mThemedContext,
           mTag,
           mClassName,
           mInitialProps);
@@ -440,7 +440,7 @@ public class UIViewOperationQueue {
 
   private @Nullable NotThreadSafeViewHierarchyUpdateDebugListener mViewHierarchyUpdateDebugListener;
 
-  /* package */ UIViewOperationQueue(
+  protected UIViewOperationQueue(
       ReactApplicationContext reactContext,
       NativeViewHierarchyManager nativeViewHierarchyManager) {
     mNativeViewHierarchyManager = nativeViewHierarchyManager;
@@ -484,6 +484,14 @@ public class UIViewOperationQueue {
     }
   }
 
+  /**
+   * Enqueues a UIOperation to be executed in UI thread. This method should only be used by a
+   * subclass to support UIOperations not provided by UIViewOperationQueue.
+   */
+  protected void enqueueUIOperation(UIOperation operation) {
+    mOperations.add(operation);
+  }
+
   public void enqueueRemoveRootView(int rootViewTag) {
     mOperations.add(new RemoveRootViewOperation(rootViewTag));
   }
@@ -525,13 +533,13 @@ public class UIViewOperationQueue {
   }
 
   public void enqueueCreateView(
-      int rootViewTagForContext,
+      ThemedReactContext themedContext,
       int viewReactTag,
       String viewClassName,
       @Nullable CatalystStylesDiffMap initialProps) {
     mOperations.add(
         new CreateViewOperation(
-            rootViewTagForContext,
+            themedContext,
             viewReactTag,
             viewClassName,
             initialProps));
