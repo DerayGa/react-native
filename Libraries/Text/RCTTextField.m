@@ -36,6 +36,7 @@
     [self addTarget:self action:@selector(textFieldSubmitEditing) forControlEvents:UIControlEventEditingDidEndOnExit];
     [self addObserver:self forKeyPath:@"selectedTextRange" options:0 context:nil];
     _reactSubviews = [NSMutableArray new];
+    _blurOnSubmit = YES;
   }
   return self;
 }
@@ -239,6 +240,11 @@ static void RCTUpdatePlaceholder(RCTTextField *self)
   }
 }
 
+- (BOOL)canBecomeFirstResponder
+{
+  return _jsRequestingFirstResponder;
+}
+
 - (void)reactWillMakeFirstResponder
 {
   _jsRequestingFirstResponder = YES;
@@ -247,11 +253,6 @@ static void RCTUpdatePlaceholder(RCTTextField *self)
 - (void)reactDidMakeFirstResponder
 {
   _jsRequestingFirstResponder = NO;
-}
-
-- (BOOL)canBecomeFirstResponder
-{
-  return _jsRequestingFirstResponder;
 }
 
 - (BOOL)resignFirstResponder
