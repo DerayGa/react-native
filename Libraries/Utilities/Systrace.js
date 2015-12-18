@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule BridgeProfiling
+ * @providesModule Systrace
  * @flow
  */
 'use strict';
@@ -15,13 +15,19 @@ type RelayProfiler = {
   attachProfileHandler(
     name: string,
     handler: (name: string, state?: any) => () => void
-  ): void
+  ): void,
+
+  attachAggregateHandler(
+    name: string,
+    handler: (name: string, callback: () => void) => void
+  ): void,
 };
 
 var GLOBAL = GLOBAL || this;
 var TRACE_TAG_REACT_APPS = 1 << 17;
+var TRACE_TAG_JSC_CALLS = 1 << 27;
 
-var _enabled;
+var _enabled = false;
 var _asyncCookie = 0;
 var _ReactPerf = null;
 function ReactPerf() {
@@ -31,17 +37,24 @@ function ReactPerf() {
   return _ReactPerf;
 }
 
-var BridgeProfiling = {
+var Systrace = {
   setEnabled(enabled: boolean) {
+    if (_enabled !== enabled) {
+      if (enabled) {
+        global.nativeTraceBeginLegacy && global.nativeTraceBeginLegacy(TRACE_TAG_JSC_CALLS);
+      } else {
+        global.nativeTraceEndLegacy && global.nativeTraceEndLegacy(TRACE_TAG_JSC_CALLS);
+      }
+    }
     _enabled = enabled;
 
     ReactPerf().enableMeasure = enabled;
   },
 
   /**
-   * profile/profileEnd for starting and then ending a profile within the same call stack frame
+   * beginEvent/endEvent for starting and then ending a profile within the same call stack frame
   **/
-  profile(profileName?: any) {
+  beginEvent(profileName?: any) {
     if (_enabled) {
       profileName = typeof profileName === 'function' ?
         profileName() : profileName;
@@ -49,18 +62,18 @@ var BridgeProfiling = {
     }
   },
 
-  profileEnd() {
+  endEvent() {
     if (_enabled) {
       global.nativeTraceEndSection(TRACE_TAG_REACT_APPS);
     }
   },
 
   /**
-   * profileAsync/profileAsyncEnd for starting and then ending a profile where the end can either
+   * beginAsyncEvent/endAsyncEvent for starting and then ending a profile where the end can either
    * occur on another thread or out of the current stack frame, eg await
-   * the returned cookie variable should be used as input into the asyncEnd call to end the profile
+   * the returned cookie variable should be used as input into the endAsyncEvent call to end the profile
   **/
-  profileAsync(profileName?: any): any {
+  beginAsyncEvent(profileName?: any): any {
     var cookie = _asyncCookie;
     if (_enabled) {
       _asyncCookie++;
@@ -71,7 +84,7 @@ var BridgeProfiling = {
     return cookie;
   },
 
-  profileAsyncEnd(profileName?: any, cookie?: any) {
+  endAsyncEvent(profileName?: any, cookie?: any) {
     if (_enabled) {
       profileName = typeof profileName === 'function' ?
         profileName() : profileName;
@@ -86,15 +99,15 @@ var BridgeProfiling = {
       }
 
       var name = objName === 'ReactCompositeComponent' && this.getName() || '';
-      BridgeProfiling.profile(`${objName}.${fnName}(${name})`);
+      Systrace.beginEvent(`${objName}.${fnName}(${name})`);
     var ret = func.apply(this, arguments);
-      BridgeProfiling.profileEnd();
+      Systrace.endEvent();
       return ret;
     };
   },
 
   swizzleReactPerf() {
-    ReactPerf().injection.injectMeasure(BridgeProfiling.reactPerfMeasure);
+    ReactPerf().injection.injectMeasure(Systrace.reactPerfMeasure);
   },
 
   /**
@@ -103,17 +116,23 @@ var BridgeProfiling = {
   **/
   attachToRelayProfiler(relayProfiler: RelayProfiler) {
     relayProfiler.attachProfileHandler('*', (name) => {
-      var cookie = BridgeProfiling.profileAsync(name);
+      var cookie = Systrace.beginAsyncEvent(name);
       return () => {
-        BridgeProfiling.profileAsyncEnd(name, cookie);
+        Systrace.endAsyncEvent(name, cookie);
       };
+    });
+
+    relayProfiler.attachAggregateHandler('*', (name, callback) => {
+      Systrace.beginEvent(name);
+      callback();
+      Systrace.endEvent();
     });
   },
 
   /* This is not called by default due to perf overhead but it's useful
      if you want to find traces which spend too much time in JSON. */
   swizzleJSON() {
-    BridgeProfiling.measureMethods(JSON, 'JSON', [
+    Systrace.measureMethods(JSON, 'JSON', [
       'parse',
       'stringify'
     ]);
@@ -121,7 +140,7 @@ var BridgeProfiling = {
 
  /**
   * Measures multiple methods of a class. For example, you can do:
-  * BridgeProfiling.measureMethods(JSON, 'JSON', ['parse', 'stringify']);
+  * Systrace.measureMethods(JSON, 'JSON', ['parse', 'stringify']);
   *
   * @param object
   * @param objectName
@@ -133,7 +152,7 @@ var BridgeProfiling = {
    }
 
    methodNames.forEach(methodName => {
-     object[methodName] = BridgeProfiling.measure(
+     object[methodName] = Systrace.measure(
        objectName,
        methodName,
        object[methodName]
@@ -143,7 +162,7 @@ var BridgeProfiling = {
 
  /**
   * Returns an profiled version of the input function. For example, you can:
-  * JSON.parse = BridgeProfiling.measure('JSON', 'parse', JSON.parse);
+  * JSON.parse = Systrace.measure('JSON', 'parse', JSON.parse);
   *
   * @param objName
   * @param fnName
@@ -161,14 +180,14 @@ var BridgeProfiling = {
        return func.apply(this, arguments);
      }
 
-     BridgeProfiling.profile(profileName);
+     Systrace.beginEvent(profileName);
      var ret = func.apply(this, arguments);
-     BridgeProfiling.profileEnd();
+     Systrace.endEvent();
      return ret;
    };
  },
 };
 
-BridgeProfiling.setEnabled(global.__RCTProfileIsProfiling || false);
+Systrace.setEnabled(global.__RCTProfileIsProfiling || false);
 
-module.exports = BridgeProfiling;
+module.exports = Systrace;

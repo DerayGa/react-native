@@ -9,6 +9,7 @@
 #include <folly/json.h>
 #include <folly/String.h>
 #include <jni/fbjni/Exceptions.h>
+#include <sys/time.h>
 #include "Value.h"
 #include "jni/OnLoad.h"
 
@@ -30,9 +31,16 @@ using fbsystrace::FbSystraceSection;
 // Add native performance markers support
 #include <react/JSCPerfLogging.h>
 
+#ifdef WITH_FB_MEMORY_PROFILING
+#include <react/JSCMemory.h>
+#endif
+
 #ifdef WITH_FB_JSC_TUNING
 #include <jsc_config_android.h>
 #endif
+
+static const int64_t NANOSECONDS_IN_SECOND = 1000000000LL;
+static const int64_t NANOSECONDS_IN_MILLISECOND = 1000000LL;
 
 using namespace facebook::jni;
 
@@ -48,6 +56,13 @@ static JSValueRef nativeFlushQueueImmediate(
     const JSValueRef arguments[],
     JSValueRef *exception);
 static JSValueRef nativeLoggingHook(
+    JSContextRef ctx,
+    JSObjectRef function,
+    JSObjectRef thisObject,
+    size_t argumentCount,
+    const JSValueRef arguments[],
+    JSValueRef *exception);
+static JSValueRef nativePerformanceNow(
     JSContextRef ctx,
     JSObjectRef function,
     JSObjectRef thisObject,
@@ -110,6 +125,7 @@ JSCExecutor::JSCExecutor(FlushImmediateCallback cb) :
   s_globalContextRefToJSCExecutor[m_context] = this;
   installGlobalFunction(m_context, "nativeFlushQueueImmediate", nativeFlushQueueImmediate);
   installGlobalFunction(m_context, "nativeLoggingHook", nativeLoggingHook);
+  installGlobalFunction(m_context, "nativePerformanceNow", nativePerformanceNow);
 
   #ifdef WITH_FB_JSC_TUNING
   configureJSCForAndroid();
@@ -119,6 +135,10 @@ JSCExecutor::JSCExecutor(FlushImmediateCallback cb) :
   addNativeTracingHooks(m_context);
   addNativeProfilingHooks(m_context);
   addNativePerfLoggingHooks(m_context);
+  #endif
+
+  #ifdef WITH_FB_MEMORY_PROFILING
+  addNativeMemoryHooks(m_context);
   #endif
 }
 
@@ -195,7 +215,11 @@ bool JSCExecutor::supportsProfiling() {
 void JSCExecutor::startProfiler(const std::string &titleString) {
   #ifdef WITH_JSC_EXTRA_TRACING
   JSStringRef title = JSStringCreateWithUTF8CString(titleString.c_str());
+  #if WITH_JSC_INTERNAL
+  JSStartProfiling(m_context, title, false);
+  #else
   JSStartProfiling(m_context, title);
+  #endif
   JSStringRelease(title);
   #endif
 }
@@ -277,6 +301,19 @@ static JSValueRef nativeLoggingHook(
     FBLOG_PRI(logLevel, "ReactNativeJS", "%s", message.str().c_str());
   }
   return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef nativePerformanceNow(
+    JSContextRef ctx,
+    JSObjectRef function,
+    JSObjectRef thisObject,
+    size_t argumentCount,
+    const JSValueRef arguments[], JSValueRef *exception) {
+  // This is equivalent to android.os.SystemClock.elapsedRealtime() in native
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+  int64_t nano = now.tv_sec * NANOSECONDS_IN_SECOND + now.tv_nsec;
+  return JSValueMakeNumber(ctx, (nano / (double)NANOSECONDS_IN_MILLISECOND));
 }
 
 } }

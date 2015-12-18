@@ -17,10 +17,11 @@ import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.modules.dialog.DialogModule;
 import com.facebook.react.modules.fresco.FrescoModule;
 import com.facebook.react.modules.intent.IntentModule;
 import com.facebook.react.modules.location.LocationModule;
-import com.facebook.react.modules.netinfo.ConnectivityModule;
+import com.facebook.react.modules.netinfo.NetInfoModule;
 import com.facebook.react.modules.network.NetworkingModule;
 import com.facebook.react.modules.storage.AsyncStorageModule;
 import com.facebook.react.modules.toast.ToastModule;
@@ -41,6 +42,7 @@ import com.facebook.react.views.toolbar.ReactToolbarManager;
 import com.facebook.react.views.view.ReactViewManager;
 import com.facebook.react.views.viewpager.ReactViewPagerManager;
 import com.facebook.react.views.swiperefresh.SwipeRefreshLayoutManager;
+import com.facebook.react.views.webview.ReactWebViewManager;
 import com.facebook.react.modules.clipboard.ClipboardModule;
 
 /**
@@ -53,11 +55,12 @@ public class MainReactPackage implements ReactPackage {
     return Arrays.<NativeModule>asList(
       new AsyncStorageModule(reactContext),
       new ClipboardModule(reactContext),
+      new DialogModule(reactContext),
       new FrescoModule(reactContext),
       new IntentModule(reactContext),
       new LocationModule(reactContext),
       new NetworkingModule(reactContext),
-      new ConnectivityModule(reactContext),
+      new NetInfoModule(reactContext),
       new WebSocketModule(reactContext),
       new ToastModule(reactContext));
   }
@@ -84,6 +87,7 @@ public class MainReactPackage implements ReactPackage {
       new ReactViewPagerManager(),
       new ReactTextInlineImageViewManager(),
       new ReactVirtualTextViewManager(),
-      new SwipeRefreshLayoutManager());
+      new SwipeRefreshLayoutManager(),
+      new ReactWebViewManager());
   }
 }

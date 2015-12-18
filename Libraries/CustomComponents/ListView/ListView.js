@@ -137,7 +137,7 @@ var ListView = React.createClass({
     renderRow: PropTypes.func.isRequired,
     /**
      * How many rows to render on initial component mount.  Use this to make
-     * it so that the first screen worth of data apears at one time instead of
+     * it so that the first screen worth of data appears at one time instead of
      * over the course of multiple frames.
      */
     initialListSize: PropTypes.number,
@@ -436,6 +436,9 @@ var ListView = React.createClass({
       height : width;
     this._updateVisibleRows();
     this._renderMoreRowsIfNeeded();
+    if (this.props.onContentSizeChange) {
+      this.props.onContentSizeChange(width, height);
+    }
   },
 
   _onLayout: function(event) {
@@ -444,6 +447,9 @@ var ListView = React.createClass({
       height : width;
     this._updateVisibleRows();
     this._renderMoreRowsIfNeeded();
+    if (this.props.onLayout) {
+      this.props.onLayout(event);
+    }
   },
 
   _setScrollVisibleLength: function(left, top, width, height) {
