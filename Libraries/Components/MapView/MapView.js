@@ -26,12 +26,6 @@ const resolveAssetSource = require('resolveAssetSource');
 const requireNativeComponent = require('requireNativeComponent');
 
 type Event = Object;
-type MapRegion = {
-  latitude: number;
-  longitude: number;
-  latitudeDelta?: number;
-  longitudeDelta?: number;
-};
 
 const MapView = React.createClass({
   mixins: [NativeMethodsMixin],
@@ -155,14 +149,14 @@ const MapView = React.createClass({
        */
       title: React.PropTypes.string,
       subtitle: React.PropTypes.string,
-      
+
       /**
        * Callout views.
        */
       leftCalloutView: React.PropTypes.element,
       rightCalloutView: React.PropTypes.element,
       detailCalloutView: React.PropTypes.element,
-      
+
       /**
        * The pin color. This can be any valid color string, or you can use one
        * of the predefined PinColors constants. Applies to both standard pins
@@ -191,7 +185,7 @@ const MapView = React.createClass({
        * annotation id
        */
       id: React.PropTypes.string,
-            
+
       /**
        * Deprecated. Use the left/right/detailsCalloutView props instead.
        */
@@ -276,7 +270,7 @@ const MapView = React.createClass({
 
   render: function() {
     let children = [], {annotations, overlays} = this.props;
-    annotations = annotations && annotations.map((annotation: Object, index: number) => {
+    annotations = annotations && annotations.map((annotation: Object) => {
       let {
         id,
         image,
@@ -286,7 +280,7 @@ const MapView = React.createClass({
         rightCalloutView,
         detailCalloutView,
       } = annotation;
-      
+
       if (!view && image && tintColor) {
         view = <Image
           style={{
@@ -294,8 +288,12 @@ const MapView = React.createClass({
           }}
           source={image}
         />;
+        image = undefined;
       }
       if (view) {
+        if (image) {
+          console.warn('`image` and `view` both set on annotation. Image will be ignored.');
+        }
         var viewIndex = children.length;
         children.push(React.cloneElement(view, {
           style: [styles.annotationView, view.props.style || {}]
@@ -319,19 +317,22 @@ const MapView = React.createClass({
           style: [styles.calloutView, detailCalloutView.props.style || {}]
         }));
       }
-      ['hasLeftCallout', 'onLeftCalloutPress'].forEach(key => {
-        if (annotation[key]) {
-          console.warn('`' + key + '` is deprecated. Use leftCalloutView instead.');
-        }
-      });
-      ['hasRightCallout', 'onRightCalloutPress'].forEach(key => {
-        if (annotation[key]) {
-          console.warn('`' + key + '` is deprecated. Use rightCalloutView instead.');
-        }
-      });
-      return {
+      if (__DEV__) {
+        ['hasLeftCallout', 'onLeftCalloutPress'].forEach(key => {
+          if (annotation[key]) {
+            console.warn('`' + key + '` is deprecated. Use leftCalloutView instead.');
+          }
+        });
+        ['hasRightCallout', 'onRightCalloutPress'].forEach(key => {
+          if (annotation[key]) {
+            console.warn('`' + key + '` is deprecated. Use rightCalloutView instead.');
+          }
+        });
+      }
+      let result = {
         ...annotation,
         tintColor: tintColor && processColor(tintColor),
+        image,
         viewIndex,
         leftCalloutViewIndex,
         rightCalloutViewIndex,
@@ -340,17 +341,20 @@ const MapView = React.createClass({
         leftCalloutView: undefined,
         rightCalloutView: undefined,
         detailCalloutView: undefined,
-        id: id || String(index),
       };
+      result.id = id || encodeURIComponent(JSON.stringify(result));
+      result.image = image && resolveAssetSource(image);
+      return result;
     });
-    overlays = overlays && overlays.map((overlay: Object, index: number) => {
+    overlays = overlays && overlays.map((overlay: Object) => {
       let {id, fillColor, strokeColor} = overlay;
-      return {
+      let result = {
         ...overlay,
         strokeColor: strokeColor && processColor(strokeColor),
         fillColor: fillColor && processColor(fillColor),
-        id: id || String(index),
       };
+      result.id = id || encodeURIComponent(JSON.stringify(result));
+      return result;
     });
 
     // TODO: these should be separate events, to reduce bridge traffic

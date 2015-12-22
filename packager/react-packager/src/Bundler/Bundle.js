@@ -58,6 +58,10 @@ class Bundle {
     return this._modules;
   }
 
+  getMainModuleId() {
+    return this._mainModuleId;
+  }
+
   setNumPrependedModules(n) {
     this._numPrependedModules = n;
   }
@@ -188,7 +192,7 @@ class Bundle {
       const minifyActivity = Activity.startEvent('minify');
       this._minifiedSourceAndMap = UglifyJS.minify(source, {
         fromString: true,
-        outSourceMap: 'bundle.js',
+        outSourceMap: this._sourceMapUrl,
         inSourceMap: this.getSourceMap(),
         output: {ascii_only: true},
       });
