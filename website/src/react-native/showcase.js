@@ -164,6 +164,12 @@ var apps = [
     author: 'Rishabh Mehan',
   },
   {
+    name: 'DockMan',
+    icon: 'http://a1.mzstatic.com/us/r30/Purple49/v4/91/b5/75/91b57552-d9bc-d8bc-10a1-617de920aaa6/icon175x175.png',
+    link: 'http://www.s21g.com/DockMan.html',
+    author: 'Genki Takiuchi (s21g Inc.)',
+  },
+  {
     name: 'DropBot',
     icon: 'http://a2.mzstatic.com/us/r30/Purple69/v4/fb/df/73/fbdf73e0-22d2-c936-3115-1defa195acba/icon175x175.png',
     link:  'https://itunes.apple.com/us/app/dropbot-phone-replacement/id1000855694?mt=8',
@@ -241,6 +247,12 @@ var apps = [
     linkAppStore: 'https://itunes.apple.com/gb/app/kakapo/id1046673139?ls=1&mt=8',
     linkPlayStore: 'https://play.google.com/store/apps/details?id=com.kakaponative',
     author: 'Daniel Levitt',
+  },
+  {
+    name: 'Koza Gujarati Dictionary',
+    icon: 'http://a1.mzstatic.com/us/r30/Purple69/v4/77/95/83/77958377-05ae-4754-684a-3c9dbb67b517/icon175x175.jpeg',
+    link: 'https://itunes.apple.com/in/app/koza-english-to-gujarati-dictionary/id982752928?mt=8',
+    author: 'KozaApps',
   },
   {
     name: 'Leanpub',
