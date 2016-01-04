@@ -172,7 +172,11 @@ var apps = [
   {
     name: 'DockMan',
     icon: 'http://a1.mzstatic.com/us/r30/Purple49/v4/91/b5/75/91b57552-d9bc-d8bc-10a1-617de920aaa6/icon175x175.png',
-    link: 'http://www.s21g.com/DockMan.html',
+    linkAppStore: 'https://itunes.apple.com/app/dockman/id1061469696',
+    linkPlayStore: 'https://play.google.com/store/apps/details?id=com.s21g.DockMan',
+    blogs: [
+      'http://www.s21g.com/DockMan.html',
+    ],
     author: 'Genki Takiuchi (s21g Inc.)',
   },
   {
@@ -190,7 +194,8 @@ var apps = [
   {
     name: 'Eat or Not',
     icon: 'http://a3.mzstatic.com/us/r30/Purple5/v4/51/be/34/51be3462-b015-ebf2-11c5-69165b37fadc/icon175x175.jpeg',
-    link: 'https://itunes.apple.com/us/app/eat-or-not/id1054565697?mt=8',
+    linkAppStore: 'https://itunes.apple.com/us/app/eat-or-not/id1054565697?mt=8',
+    linkPlayStore: 'https://play.google.com/store/apps/details?id=com.eon',
     author: 'Sharath Prabhal',
   },
   {

@@ -6,16 +6,17 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule H2
+ * @providesModule AlgoliaDocSearch
  */
 
-var React = require('React');
-var Header = require('Header');
-
-var H2 = React.createClass({
+var AlgoliaDocSearch = React.createClass({
   render: function() {
-    return <Header {...this.props} level={2}>{this.props.children}</Header>;
+    return (
+      <div className="algolia-search-wrapper">
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </div>
+    );
   }
 });
 
-module.exports = H2;
+module.exports = AlgoliaDocSearch;
