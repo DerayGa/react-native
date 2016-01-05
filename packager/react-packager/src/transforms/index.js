@@ -6,13 +6,11 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
+'use strict';
 
-@interface RCTBundleURLProcessor : NSObject
+exports.getAll = function() {
+  return [
+    require('./babel-plugin-system-import'),
+  ];
+};
 
-+ (id)sharedProcessor;
-
-- (NSString *)getQueryStringValue:(NSString *)attribute;
-- (void)setQueryStringValue:(NSString *)value forAttribute:(NSString *)attribute;
-- (NSURL *)process:(NSURL *)url;
-
-@end

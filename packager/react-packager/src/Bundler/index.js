@@ -56,6 +56,10 @@ const validateOpts = declareOpts({
     type:'string',
     required: false,
   },
+  enableInternalTransforms: {
+    type: 'boolean',
+    default: false,
+  },
   nonPersistent: {
     type: 'boolean',
     default: false,
@@ -131,6 +135,7 @@ class Bundler {
       blacklistRE: opts.blacklistRE,
       cache: this._cache,
       transformModulePath: opts.transformModulePath,
+      enableInternalTransforms: opts.enableInternalTransforms,
     });
 
     this._projectRoots = opts.projectRoots;
@@ -279,31 +284,29 @@ class Bundler {
     });
   }
 
-  bundleForHMR({
-    entryFile,
-    platform,
-  }) {
-    return this.getDependencies(entryFile, /*isDev*/true, platform).then(response => {
-      const module = response.dependencies.filter(module => module.path === entryFile)[0];
-
-      return Promise.all([
-        module.getName(),
-        this._transformer.loadFileAndTransform(
-          path.resolve(entryFile),
-          // TODO(martinb): pass non null main (t9527509)
-          this._getTransformOptions({main: null}, {hot: true}),
-        ),
-      ]).then(([moduleName, transformedSource]) => {
-        return (`
-          __accept(
-            '${moduleName}',
-            function(global, require, module, exports) {
-              ${transformedSource.code}
-            }
-          );
-        `);
-      });
-    });
+  bundleForHMR(modules) {
+    return Promise.all(
+      modules.map(module => {
+        return Promise.all([
+          module.getName(),
+          this._transformer.loadFileAndTransform(
+            module.path,
+            // TODO(martinb): pass non null main (t9527509)
+            this._getTransformOptions({main: null}, {hot: true}),
+          ),
+        ]).then(([moduleName, transformedSource]) => {
+          return (`
+            __accept(
+              '${moduleName}',
+              function(global, require, module, exports) {
+                ${transformedSource.code}
+              }
+            );
+          `);
+        });
+      })
+    )
+    .then(code => code.join('\n'));
   }
 
   invalidateFile(filePath) {
@@ -312,6 +315,10 @@ class Bundler {
 
   getShallowDependencies(entryFile) {
     return this._resolver.getShallowDependencies(entryFile);
+  }
+
+  getModuleForPath(entryFile) {
+    return this._resolver.getModuleForPath(entryFile);
   }
 
   getDependencies(main, isDev, platform) {
