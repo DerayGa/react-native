@@ -35,8 +35,7 @@
 typedef NS_ENUM(NSUInteger, RCTBridgeFields) {
   RCTBridgeFieldRequestModuleIDs = 0,
   RCTBridgeFieldMethodIDs,
-  RCTBridgeFieldParams,
-  RCTBridgeFieldCallID,
+  RCTBridgeFieldParamss,
 };
 
 RCT_EXTERN NSArray<Class> *RCTGetModuleClasses(void);
@@ -65,9 +64,6 @@ RCT_EXTERN NSArray<Class> *RCTGetModuleClasses(void);
   NSUInteger _syncInitializedModules;
   NSUInteger _asyncInitializedModules;
 }
-
-@synthesize flowID = _flowID;
-@synthesize flowIDMap = _flowIDMap;
 
 - (instancetype)initWithParentBridge:(RCTBridge *)bridge
 {
@@ -179,9 +175,7 @@ RCT_EXTERN NSArray<Class> *RCTGetModuleClasses(void);
   dispatch_group_notify(initModulesAndLoadSource, dispatch_get_main_queue(), ^{
     RCTBatchedBridge *strongSelf = weakSelf;
     if (sourceCode && strongSelf.loading) {
-      dispatch_async(bridgeQueue, ^{
-        [weakSelf executeSourceCode:sourceCode];
-      });
+      [strongSelf executeSourceCode:sourceCode];
     }
   });
 }
@@ -224,6 +218,14 @@ RCT_EXTERN NSArray<Class> *RCTGetModuleClasses(void);
                 "trying to access a module too early in the startup procedure.");
   }
   return _moduleClassesByID;
+}
+
+/**
+ * Used by RCTUIManager
+ */
+- (RCTModuleData *)moduleDataForName:(NSString *)moduleName
+{
+  return _moduleDataByName[moduleName];
 }
 
 - (id)moduleForName:(NSString *)moduleName
@@ -299,7 +301,8 @@ RCT_EXTERN NSArray<Class> *RCTGetModuleClasses(void);
     RCTModuleData *moduleData;
     if (module) {
       if (module != (id)kCFNull) {
-        moduleData = [[RCTModuleData alloc] initWithModuleInstance:module];
+        moduleData = [[RCTModuleData alloc] initWithModuleInstance:module
+                                                            bridge:self];
       }
     } else {
        moduleData = [[RCTModuleData alloc] initWithModuleClass:moduleClass
@@ -324,13 +327,20 @@ RCT_EXTERN NSArray<Class> *RCTGetModuleClasses(void);
 
   for (RCTModuleData *moduleData in _moduleDataByID) {
     if (moduleData.hasInstance) {
-      [moduleData setBridgeForInstance:self];
+      [moduleData setBridgeForInstance];
     }
   }
 
   for (RCTModuleData *moduleData in _moduleDataByID) {
     if (moduleData.hasInstance) {
       [moduleData methodQueue]; // initialize the queue
+    }
+  }
+
+  for (RCTModuleData *moduleData in _moduleDataByID) {
+    if (moduleData.hasInstance) {
+      [self registerModuleForFrameUpdates:moduleData.instance
+                           withModuleData:moduleData];
     }
   }
 
@@ -351,18 +361,22 @@ RCT_EXTERN NSArray<Class> *RCTGetModuleClasses(void);
   [_javaScriptExecutor setUp];
 }
 
-- (void)registerModuleForFrameUpdates:(RCTModuleData *)moduleData
+- (void)registerModuleForFrameUpdates:(id<RCTBridgeModule>)module
+                       withModuleData:(RCTModuleData *)moduleData
 {
-  if ([moduleData.moduleClass conformsToProtocol:@protocol(RCTFrameUpdateObserver)]) {
-    [_frameUpdateObservers addObject:moduleData];
-    id<RCTFrameUpdateObserver> observer = (id<RCTFrameUpdateObserver>)moduleData.instance;
-    __weak typeof(self) weakSelf = self;
-    __weak typeof(_javaScriptExecutor) weakJavaScriptExecutor = _javaScriptExecutor;
-    observer.pauseCallback = ^{
-      [weakJavaScriptExecutor executeBlockOnJavaScriptQueue:^{
-        [weakSelf updateJSDisplayLinkState];
-      }];
-    };
+  if (![_frameUpdateObservers containsObject:moduleData]) {
+    if ([moduleData.moduleClass conformsToProtocol:@protocol(RCTFrameUpdateObserver)]) {
+      [_frameUpdateObservers addObject:moduleData];
+      // Don't access the module instance via moduleData, as this will cause deadlock
+      id<RCTFrameUpdateObserver> observer = (id<RCTFrameUpdateObserver>)module;
+      __weak typeof(self) weakSelf = self;
+      __weak typeof(_javaScriptExecutor) weakJavaScriptExecutor = _javaScriptExecutor;
+      observer.pauseCallback = ^{
+        [weakJavaScriptExecutor executeBlockOnJavaScriptQueue:^{
+          [weakSelf updateJSDisplayLinkState];
+        }];
+      };
+    }
   }
 }
 
@@ -554,6 +568,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
   }
 
   RCTAssertMainThread();
+  RCTAssert(_javaScriptExecutor != nil, @"Can't complete invalidation without a JS executor");
 
   _loading = NO;
   _valid = NO;
@@ -589,15 +604,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
       if (RCTProfileIsProfiling()) {
         RCTProfileUnhookModules(self);
       }
+
       _moduleDataByName = nil;
       _moduleDataByID = nil;
       _moduleClassesByID = nil;
       _modulesByName_DEPRECATED = nil;
       _frameUpdateObservers = nil;
+      _pendingCalls = nil;
 
-      if (_flowIDMap != NULL) {
-        CFRelease(_flowIDMap);
-      }
     }];
   });
 }
@@ -800,22 +814,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
 - (void)handleBuffer:(NSArray *)buffer
 {
   NSArray *requestsArray = [RCTConvert NSArray:buffer];
-
-  if (RCT_DEBUG && requestsArray.count <= RCTBridgeFieldParams) {
+  if (RCT_DEBUG && requestsArray.count <= RCTBridgeFieldParamss) {
     RCTLogError(@"Buffer should contain at least %tu sub-arrays. Only found %tu",
-                RCTBridgeFieldParams + 1, requestsArray.count);
+              RCTBridgeFieldParamss + 1, requestsArray.count);
     return;
   }
 
   NSArray<NSNumber *> *moduleIDs = [RCTConvert NSNumberArray:requestsArray[RCTBridgeFieldRequestModuleIDs]];
   NSArray<NSNumber *> *methodIDs = [RCTConvert NSNumberArray:requestsArray[RCTBridgeFieldMethodIDs]];
-  NSArray<NSArray *> *paramsArrays = [RCTConvert NSArrayArray:requestsArray[RCTBridgeFieldParams]];
-
-  int64_t callID = -1;
-
-  if (requestsArray.count > 3) {
-    callID = [requestsArray[RCTBridgeFieldCallID] longLongValue];
-  }
+  NSArray<NSArray *> *paramsArrays = [RCTConvert NSArrayArray:requestsArray[RCTBridgeFieldParamss]];
 
   if (RCT_DEBUG && (moduleIDs.count != methodIDs.count || moduleIDs.count != paramsArrays.count)) {
     RCTLogError(@"Invalid data message - all must be length: %zd", moduleIDs.count);
@@ -849,11 +856,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
       @autoreleasepool {
         for (NSNumber *indexObj in calls) {
           NSUInteger index = indexObj.unsignedIntegerValue;
-          if (callID != -1) {
-            int64_t newFlowID = (int64_t)CFDictionaryGetValue(_flowIDMap, (const void *)(_flowID + index));
-            _RCTProfileEndFlowEvent(@(newFlowID));
-            CFDictionaryRemoveValue(_flowIDMap, (const void *)(_flowID + index));
-          }
           [self _handleRequestNumber:index
                             moduleID:[moduleIDs[index] integerValue]
                             methodID:[methodIDs[index] integerValue]
@@ -872,8 +874,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
       dispatch_async(queue, block);
     }
   }
-
-  _flowID = callID;
 }
 
 - (void)partialBatchDidFlush

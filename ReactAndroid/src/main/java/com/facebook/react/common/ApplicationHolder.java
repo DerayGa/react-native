@@ -30,6 +30,7 @@ public class ApplicationHolder {
     sApplication = application;
   }
 
+  @DoNotStrip
   public static Application getApplication() {
     return Assertions.assertNotNull(sApplication);
   }

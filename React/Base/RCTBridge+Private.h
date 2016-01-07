@@ -13,10 +13,6 @@
 
 @interface RCTBridge ()
 
-// Used for the profiler flow events between JS and native
-@property (nonatomic, assign) int64_t flowID;
-@property (nonatomic, assign) CFMutableDictionaryRef flowIDMap;
-
 + (instancetype)currentBridge;
 + (void)setCurrentBridge:(RCTBridge *)bridge;
 
@@ -54,13 +50,24 @@
 
 @interface RCTBridge (RCTBatchedBridge)
 
-- (void)registerModuleForFrameUpdates:(RCTModuleData *)moduleData;
+/**
+ * Used by RCTModuleData to register the module for frame updates after it is
+ * lazily initialized.
+ */
+- (void)registerModuleForFrameUpdates:(id<RCTBridgeModule>)module
+                       withModuleData:(RCTModuleData *)moduleData;
 
 /**
  * Dispatch work to a module's queue - this is also suports the fake RCTJSThread
  * queue. Exposed for the RCTProfiler
  */
 - (void)dispatchBlock:(dispatch_block_t)block queue:(dispatch_queue_t)queue;
+
+/**
+ * Get the module data for a given module name. Used by UIManager to implement
+ * the `dispatchViewManagerCommand` method.
+ */
+- (RCTModuleData *)moduleDataForName:(NSString *)moduleName;
 
 /**
  * Systrace profiler toggling methods exposed for the RCTDevMenu

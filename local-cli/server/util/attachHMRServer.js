@@ -113,6 +113,10 @@ function attachHMRServer({httpServer, path, packagerServer}) {
 
           return packagerServer.getShallowDependencies(filename)
             .then(deps => {
+              if (!client) {
+                return [];
+              }
+
               // if the file dependencies have change we need to invalidate the
               // dependencies caches because the list of files we need to send
               // to the client may have changed
@@ -129,6 +133,10 @@ function attachHMRServer({httpServer, path, packagerServer}) {
                   dependenciesModulesCache,
                   shallowDependencies,
                 }) => {
+                  if (!client) {
+                    return [];
+                  }
+
                   // build list of modules for which we'll send HMR updates
                   const modulesToUpdate = [];
                   Object.keys(dependenciesModulesCache).forEach(module => {
@@ -146,14 +154,27 @@ function attachHMRServer({httpServer, path, packagerServer}) {
                 });
             })
             .then(modulesToUpdate => {
+              if (!client) {
+                return;
+              }
+
               // make sure the file was modified is part of the bundle
               if (!client.shallowDependencies[filename]) {
                 return;
               }
 
-              return packagerServer.buildBundleForHMR(modulesToUpdate);
+              return packagerServer.buildBundleForHMR({
+                entryFile: client.bundleEntry,
+                platform: client.platform,
+                modules: modulesToUpdate,
+              });
             })
             .then(bundle => {
+              if (!client) {
+                return;
+              }
+
+              // check we actually want to send an HMR update
               if (bundle) {
                 client.ws.send(bundle);
               }

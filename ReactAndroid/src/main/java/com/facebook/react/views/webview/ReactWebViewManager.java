@@ -74,13 +74,6 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
 
   private WebViewConfig mWebViewConfig;
 
-  static {
-    if (ReactBuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-      // TODO(T9455950): re-enable debugging
-      // WebView.setWebContentsDebuggingEnabled(true);
-    }
-  }
-
   private static class ReactWebViewClient extends WebViewClient {
 
     private boolean mLastLoadFailed = false;
@@ -248,15 +241,20 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
     ReactWebView webView = new ReactWebView(reactContext);
     reactContext.addLifecycleEventListener(webView);
     mWebViewConfig.configWebView(webView);
+
+    if (ReactBuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+      WebView.setWebContentsDebuggingEnabled(true);
+    }
+
     return webView;
   }
 
-  @ReactProp(name = "javaScriptEnabledAndroid")
+  @ReactProp(name = "javaScriptEnabled")
   public void setJavaScriptEnabled(WebView view, boolean enabled) {
     view.getSettings().setJavaScriptEnabled(enabled);
   }
 
-  @ReactProp(name = "domStorageEnabledAndroid")
+  @ReactProp(name = "domStorageEnabled")
   public void setDomStorageEnabled(WebView view, boolean enabled) {
     view.getSettings().setDomStorageEnabled(enabled);
   }
@@ -325,9 +323,9 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
   }
 
   @Override
-  public void onDropViewInstance(ThemedReactContext reactContext, WebView webView) {
-    super.onDropViewInstance(reactContext, webView);
-    reactContext.removeLifecycleEventListener((ReactWebView) webView);
+  public void onDropViewInstance(WebView webView) {
+    super.onDropViewInstance(webView);
+    ((ThemedReactContext) webView.getContext()).removeLifecycleEventListener((ReactWebView) webView);
     ((ReactWebView) webView).cleanupCallbacksAndDestroy();
   }
 }
