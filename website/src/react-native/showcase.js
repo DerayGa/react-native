@@ -247,6 +247,12 @@ var apps = [
     author: 'Scrollback',
   },
   {
+    name: 'Honest Reviews',
+    icon: 'http://honestreviews.techulus.com/icon.png',
+    link: 'https://play.google.com/store/apps/details?id=com.techulus.honestreviews&hl=en',
+    author: 'Arjun Komath',
+  },
+  {
     name: 'HSK Level 1 Chinese Flashcards',
     icon: 'http://is2.mzstatic.com/image/pf/us/r30/Purple1/v4/b2/4f/3a/b24f3ae3-2597-cc70-1040-731b425a5904/mzl.amxdcktl.jpg',
     link: 'https://itunes.apple.com/us/app/hsk-level-1-chinese-flashcards/id936639994',
@@ -332,6 +338,12 @@ var apps = [
     link: 'https://itunes.apple.com/cn/app/mockingbot/id1050565468?l=en&mt=8',
     author: 'YuanYi Zhang (@mockingbot)',
   },
+	{
+		name: 'MoneyLion',
+		icon: 'http://a5.mzstatic.com/us/r30/Purple69/v4/d7/9d/ad/d79daddc-8d67-8a6c-61e2-950425946dd2/icon350x350.jpeg',
+		link: 'https://itunes.apple.com/us/app/moneylion/id1064677082?mt=8',
+		author: 'MoneyLion LLC',
+	},
   {
     name: 'Mr. Dapper',
     icon: 'http://is5.mzstatic.com/image/pf/us/r30/Purple4/v4/e8/3f/7c/e83f7cb3-2602-f8e8-de9a-ce0a775a4a14/mzl.hmdjhfai.png',
@@ -502,11 +514,17 @@ var apps = [
     author: 'Melih Mucuk',
   },
   {
-    name:'天才段子手',
-    icon:'http://pp.myapp.com/ma_icon/0/icon_12236104_1451810987/96',
+    name: '天才段子手',
+    icon: 'http://pp.myapp.com/ma_icon/0/icon_12236104_1451810987/96',
     linkAppStore: 'https://itunes.apple.com/us/app/tian-cai-duan-zi-shou-shen/id992312701?l=zh&ls=1&mt=8',
     linkPlayStore: 'https://play.google.com/store/apps/details?id=com.geniusJokeWriter.app',
-    author:'Ran Zhao&Ji Zhao'
+    author: 'Ran Zhao&Ji Zhao'
+  },
+  {
+    name: '你造么',
+    icon: 'http://7xk1ez.com2.z0.glb.qiniucdn.com/logo-mobile-0114logo_welcom.png',
+    link: 'https://itunes.apple.com/us/app/ni-zao-me/id1025294933?l=zh&ls=1&mt=8',
+    author: 'Scott Chen(@NZAOM)'
   }
 ];
 
