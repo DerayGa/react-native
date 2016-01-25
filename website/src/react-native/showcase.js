@@ -217,6 +217,12 @@ var apps = [
     author: 'Liubomyr Mykhalchenko (@liubko)',
   },
   {
+    name: 'Feline for Product Hunt',
+    icon: 'https://lh3.googleusercontent.com/MCoiCCwUan0dxzqRR_Mrr7kO308roYdI2aTsIpUGYWzUmpJT1-R2_J04weQKFEd3Mg=w300-rw',
+    link: 'https://play.google.com/store/apps/details?id=com.arjunkomath.product_hunt&hl=en',
+    author: 'Arjun Komath',
+  },
+  {
     name: 'Foodstand',
     icon: 'http://a3.mzstatic.com/us/r30/Purple69/v4/33/c1/3b/33c13b88-8ec2-23c1-56bb-712ad9938290/icon350x350.jpeg',
     link: 'https://www.thefoodstand.com/download',
@@ -429,6 +435,12 @@ var apps = [
     author: 'Rota',
   },
   {
+    name: 'Round - A better way to remember your medicine',
+    icon: 'https://s3.mzstatic.com/us/r30/Purple69/v4/d3/ee/54/d3ee54cf-13b6-5f56-0edc-6c70ac90b2be/icon175x175.png',
+    link: 'https://itunes.apple.com/us/app/round-beautiful-medication/id1059591124?mt=8',
+    author: 'Circadian Design',
+  },
+  {
     name: 'RWpodPlayer - audio player for RWpod podcast',
     icon: 'http://a1.mzstatic.com/us/r30/Purple69/v4/a8/c0/b1/a8c0b130-e44b-742d-6458-0c89fcc15b6b/icon175x175.png',
     link: 'https://itunes.apple.com/us/app/rwpodplayer/id1053885042?mt=8',
@@ -525,6 +537,13 @@ var apps = [
     icon: 'http://7xk1ez.com2.z0.glb.qiniucdn.com/logo-mobile-0114logo_welcom.png',
     link: 'https://itunes.apple.com/us/app/ni-zao-me/id1025294933?l=zh&ls=1&mt=8',
     author: 'Scott Chen(@NZAOM)'
+  },
+  {
+    name: 'うたよみん',
+    icon: 'http://a4.mzstatic.com/jp/r30/Purple69/v4/19/8f/fa/198ffafe-66a6-d682-c8d1-47faf2b0badb/icon175x175.jpeg',
+    linkAppStore: 'https://itunes.apple.com/jp/app/minnano-duan-ge-tou-gaokomyuniti/id675671254?mt=8',
+    linkPlayStore: 'https://play.google.com/store/apps/details?id=com.plasticaromantica.utayomin',
+    author: 'Takayuki IMAI'
   }
 ];
 
