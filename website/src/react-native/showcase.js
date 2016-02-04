@@ -136,6 +136,12 @@ var apps = [
     author: 'Alex Duckmanton',
   },
   {
+    name: 'Bhagavad Gita Lite',
+    icon: 'https://s3-us-west-2.amazonaws.com/bhagavadgitaapp/gita-free.png',
+    link: 'https://itunes.apple.com/us/app/bhagavad-gita-lite/id1071711190?ls=1&mt=8',
+    author: 'Tom Goldenberg & Nick Brown'
+  },
+  {
     name: 'Bionic eStore',
     icon: 'http://a5.mzstatic.com/us/r30/Purple7/v4/c1/9a/3f/c19a3f82-ecc3-d60b-f983-04acc203705f/icon175x175.jpeg',
     link: 'https://itunes.apple.com/us/app/bionic-estore/id994537615?mt=8',
@@ -147,6 +153,12 @@ var apps = [
     linkAppStore: 'https://itunes.apple.com/gb/app/canddi/id1018168131?mt=8',
     linkPlayStore: 'https://play.google.com/store/apps/details?id=com.canddi',
     author: 'CANDDi LTD.',
+  },
+  {
+    name: 'CaratLane',
+    icon: 'https://lh3.googleusercontent.com/wEN-Vvpbnw_n89dbXPxWkNnXB7sALKBKvpX_hbzrWbuC4tFi5tVkWHq8k5TAvdbf5UQ=w300-rw',
+    link: 'https://play.google.com/store/apps/details?id=com.caratlane.android&hl=en',
+    author: 'CaratLane',
   },
   {
     name: 'CBS Sports Franchise Football',
@@ -298,7 +310,8 @@ var apps = [
   {
     name: 'LoadDocs',
     icon: 'http://a2.mzstatic.com/us/r30/Purple3/v4/b5/ca/78/b5ca78ca-392d-6874-48bf-762293482d42/icon350x350.jpeg',
-    link: 'https://itunes.apple.com/us/app/loaddocs/id1041596066',
+    linkAppStore: 'https://itunes.apple.com/us/app/loaddocs/id1041596066',
+    linkPlayStore: 'https://play.google.com/store/apps/details?id=com.convoy.loaddoc&hl=en',
     author: 'LoadDocs',
   },
   {
@@ -455,7 +468,8 @@ var apps = [
   {
     name: 'ShareHows',
     icon: 'http://a4.mzstatic.com/us/r30/Purple5/v4/78/1c/83/781c8325-a1e1-4afc-f106-a629bcf3c6ef/icon175x175.png',
-    link: 'https://itunes.apple.com/kr/app/sweeohauseu-sesang-ui-modeun/id1060914858?mt=8',
+    linkAppStore: 'https://itunes.apple.com/kr/app/sweeohauseu-sesang-ui-modeun/id1060914858?mt=8',
+    linkPlayStore: 'https://play.google.com/store/apps/details?id=kr.dobbit.sharehows',
     author: 'Dobbit Co., Ltd.'
   },
   {
@@ -475,6 +489,12 @@ var apps = [
     icon: 'http://a5.mzstatic.com/us/r30/Purple2/v4/b1/e6/2b/b1e62b3d-6747-0d0b-2a21-b6ba316a7890/icon175x175.png',
     link: 'https://itunes.apple.com/us/app/thai-tone/id1064086189?mt=8',
     author: 'Alexey Ledak',
+  },
+  {
+    name: 'This AM',
+    icon: 'http://s3.r29static.com//bin/public/efe/x/1542038/image.png',
+    link: 'https://itunes.apple.com/us/app/refinery29-this-am-top-breaking/id988472315?mt=8',
+    author: 'Refinery29',
   },
   {
     name: 'Tong Xing Wang',
@@ -497,9 +517,9 @@ var apps = [
   },
   {
     name: 'WPV',
-    icon: 'http://a1.mzstatic.com/us/r30/Purple3/v4/f1/ae/51/f1ae516b-d8e9-1b6d-acfe-755623a88327/icon350x350.png',
+    icon: 'http://a2.mzstatic.com/us/r30/Purple49/v4/a8/26/d7/a826d7bf-337b-c6b8-488d-aca98027754d/icon350x350.png',
     link: 'https://itunes.apple.com/us/app/wpv/id725222647?mt=8',
-    author: 'Yamill Vallecillo (@yamill3)',
+    author: 'Yamill Vallecillo',
   },
   {
     name: 'Yoloci',
@@ -544,7 +564,7 @@ var apps = [
     linkAppStore: 'https://itunes.apple.com/jp/app/minnano-duan-ge-tou-gaokomyuniti/id675671254?mt=8',
     linkPlayStore: 'https://play.google.com/store/apps/details?id=com.plasticaromantica.utayomin',
     author: 'Takayuki IMAI'
-  }
+  },
 ];
 
 var AppList = React.createClass({
