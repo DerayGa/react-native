@@ -103,29 +103,36 @@ class ResolutionRequest {
       );
   }
 
-  getOrderedDependencies(response, mocksPattern) {
-    return this._getAllMocks(mocksPattern).then(mocks => {
-      response.setMocks(mocks);
-
+  getOrderedDependencies(response, mocksPattern, recursive = true) {
+    return this._getAllMocks(mocksPattern).then(allMocks => {
       const entry = this._moduleCache.getModule(this._entryPath);
+      const mocks = Object.create(null);
       const visited = Object.create(null);
       visited[entry.hash()] = true;
 
+      response.pushDependency(entry);
       const collect = (mod) => {
-        response.pushDependency(mod);
         return mod.getDependencies().then(
           depNames => Promise.all(
             depNames.map(name => this.resolveDependency(mod, name))
           ).then((dependencies) => [depNames, dependencies])
         ).then(([depNames, dependencies]) => {
-          if (mocks) {
-            return mod.getName().then(name => {
-              if (mocks[name]) {
-                const mockModule =
-                  this._moduleCache.getModule(mocks[name]);
-                depNames.push(name);
-                dependencies.push(mockModule);
-              }
+          if (allMocks) {
+            const list = [mod.getName()];
+            const pkg = mod.getPackage();
+            if (pkg) {
+              list.push(pkg.getName());
+            }
+            return Promise.all(list).then(names => {
+              names.forEach(name => {
+                if (allMocks[name] && !mocks[name]) {
+                  const mockModule =
+                    this._moduleCache.getModule(allMocks[name]);
+                  depNames.push(name);
+                  dependencies.push(mockModule);
+                  mocks[name] = allMocks[name];
+                }
+              });
               return [depNames, dependencies];
             });
           }
@@ -141,8 +148,9 @@ class ResolutionRequest {
               // module backing them. If a dependency cannot be found but there
               // exists a mock with the desired ID, resolve it and add it as
               // a dependency.
-              if (mocks && mocks[name]) {
-                const mockModule = this._moduleCache.getModule(mocks[name]);
+              if (allMocks && allMocks[name] && !mocks[name]) {
+                const mockModule = this._moduleCache.getModule(allMocks[name]);
+                mocks[name] = allMocks[name];
                 return filteredPairs.push([name, mockModule]);
               }
 
@@ -162,7 +170,10 @@ class ResolutionRequest {
             p = p.then(() => {
               if (!visited[modDep.hash()]) {
                 visited[modDep.hash()] = true;
-                return collect(modDep);
+                response.pushDependency(modDep);
+                if (recursive) {
+                  return collect(modDep);
+                }
               }
               return null;
             });
@@ -172,7 +183,7 @@ class ResolutionRequest {
         });
       };
 
-      return collect(entry);
+      return collect(entry).then(() => response.setMocks(mocks));
     });
   }
 
@@ -279,16 +290,16 @@ class ResolutionRequest {
 
   _resolveNodeDependency(fromModule, toModuleName) {
     if (toModuleName[0] === '.' || toModuleName[1] === '/') {
-      return this._resolveFileOrDir(fromModule, toModuleName)
+      return this._resolveFileOrDir(fromModule, toModuleName);
     } else {
       return this._redirectRequire(fromModule, toModuleName).then(
         realModuleName => {
           if (realModuleName[0] === '.' || realModuleName[1] === '/') {
             // derive absolute path /.../node_modules/fromModuleDir/realModuleName
-            let fromModuleParentIdx = fromModule.path.lastIndexOf('node_modules/') + 13
-            let fromModuleDir = fromModule.path.slice(0, fromModule.path.indexOf('/', fromModuleParentIdx))
-            let absPath = path.join(fromModuleDir, realModuleName)
-            return this._resolveFileOrDir(fromModule, absPath)
+            const fromModuleParentIdx = fromModule.path.lastIndexOf('node_modules/') + 13;
+            const fromModuleDir = fromModule.path.slice(0, fromModule.path.indexOf('/', fromModuleParentIdx));
+            const absPath = path.join(fromModuleDir, realModuleName);
+            return this._resolveFileOrDir(fromModule, absPath);
           }
 
           const searchQueue = [];
@@ -383,7 +394,7 @@ class ResolutionRequest {
         throw new UnableToResolveError(
           fromModule,
           toModule,
-`Invalid directory ${potentialDirPath}
+`Unable to find this module in its module map or any of the node_modules directories under ${potentialDirPath} and its parent directories
 
 This might be related to https://github.com/facebook/react-native/issues/4968
 To resolve try the following:
