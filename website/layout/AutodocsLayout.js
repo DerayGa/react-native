@@ -122,7 +122,7 @@ var ComponentDoc = React.createClass({
         </Header>
         {prop.deprecationMessage && <div className="deprecated">
           <div className="deprecatedTitle">
-            <img className="deprecatedIcon" src="/react-native/img/Warning.png" />
+            <img className="deprecatedIcon" src="img/Warning.png" />
             <span>Deprecated</span>
           </div>
           <div className="deprecatedMessage">
@@ -175,15 +175,15 @@ var ComponentDoc = React.createClass({
           if (name === 'LayoutPropTypes') {
             name = 'Flexbox';
             link =
-              <a href={slugify(name) + '.html#proptypes'}>{name}...</a>;
+              <a href={'docs/' + slugify(name) + '.html#proptypes'}>{name}...</a>;
           } else if (name === 'TransformPropTypes') {
             name = 'Transforms';
             link =
-              <a href={slugify(name) + '.html#proptypes'}>{name}...</a>;
+              <a href={'docs/' + slugify(name) + '.html#proptypes'}>{name}...</a>;
           } else {
             name = name.replace('StylePropTypes', '');
             link =
-              <a href={slugify(name) + '.html#style'}>{name}#style...</a>;
+              <a href={'docs/' + slugify(name) + '.html#style'}>{name}#style...</a>;
           }
           return (
             <div className="prop" key={name}>
@@ -416,7 +416,7 @@ var EmbeddedSimulator = React.createClass({
       <div className="column-left">
         <p><a className="modal-button-open"><strong>Run this example</strong></a></p>
         <div className="modal-button-open modal-button-open-img">
-          <img alt="Run example in simulator" width="170" height="358" src="/react-native/img/alertIOS.png" />
+          <img alt="Run example in simulator" width="170" height="358" src="img/alertIOS.png" />
         </div>
         <Modal />
       </div>
