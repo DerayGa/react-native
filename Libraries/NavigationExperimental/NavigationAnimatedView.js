@@ -70,23 +70,41 @@ type Layout = {
   height: Animated.Value;
 };
 
-type OverlayRenderer = (
-  position: Animated.Value,
-  layout: Layout
+type Position = Animated.Value;
+
+/**
+ * Definition of the props object that is passed to the functions
+ * that render the overlay and the scene.
+ */
+type NavigationStateRendererProps = {
+  // The state of the child view.
+  navigationState: NavigationState,
+  // The index of the child view.
+  index: number,
+  // The "progressive index" of the containing navigation state.
+  position: Position,
+  // The layout of the the containing navigation view.
+  layout: Layout,
+  // The state of the the containing navigation view.
+  navigationParentState: NavigationParentState,
+};
+
+type NavigationStateRenderer = (
+  props: NavigationStateRendererProps,
 ) => ReactElement;
 
-type SceneRenderer = (
-  state: NavigationState,
-  index: number,
+type TimingSetter = (
   position: Animated.Value,
-  layout: Layout
-) => ReactElement
+  newState: NavigationParentState,
+  lastState: NavigationParentState,
+) => void;
 
 type Props = {
   navigationState: NavigationParentState;
-  renderScene: SceneRenderer;
-  renderOverlay: ?OverlayRenderer;
+  renderScene: NavigationStateRenderer;
+  renderOverlay: ?NavigationStateRenderer;
   style: any;
+  setTiming: ?TimingSetter;
 };
 
 class NavigationAnimatedView extends React.Component {
@@ -120,11 +138,8 @@ class NavigationAnimatedView extends React.Component {
     }
   }
   componentDidUpdate(lastProps) {
-    if (lastProps.navigationState.index !== this.props.navigationState.index) {
-      Animated.spring(
-        this.state.position,
-        {toValue: this.props.navigationState.index}
-      ).start();
+    if (lastProps.navigationState.index !== this.props.navigationState.index && this.props.setTiming) {
+      this.props.setTiming(this.state.position, this.props.navigationState, lastProps.navigationState);
     }
   }
   componentWillUnmount() {
@@ -160,7 +175,7 @@ class NavigationAnimatedView extends React.Component {
 
     if (lastState) {
       lastState.children.forEach((child, index) => {
-        if (!NavigationStateUtils.get(nextState, child.key)) {
+        if (!NavigationStateUtils.get(nextState, child.key) && index !== nextState.index) {
           nextScenes.push({
             index,
             state: child,
@@ -188,7 +203,7 @@ class NavigationAnimatedView extends React.Component {
         }}
         style={this.props.style}>
         {this.state.scenes.map(this._renderScene, this)}
-        {this._renderOverlay(this._renderOverlay, this)}
+        {this._renderOverlay()}
       </View>
     );
   }
@@ -201,24 +216,43 @@ class NavigationAnimatedView extends React.Component {
     };
   }
   _renderScene(scene: NavigationScene) {
-    return this.props.renderScene(
-      scene.state,
-      scene.index,
-      this.state.position,
-      this._getLayout()
-    );
+    return this.props.renderScene({
+      index: scene.index,
+      layout: this._getLayout(),
+      navigationParentState: this.props.navigationState,
+      navigationState: scene.state,
+      position: this.state.position,
+    });
   }
   _renderOverlay() {
     const {renderOverlay} = this.props;
     if (renderOverlay) {
-      return renderOverlay(
-        this.state.position,
-        this._getLayout()
-      );
+      const parentState = this.props.navigationState;
+      return renderOverlay({
+        index: parentState.index,
+        layout: this._getLayout(),
+        navigationParentState: parentState,
+        navigationState: parentState.children[parentState.index],
+        position: this.state.position,
+      });
     }
     return null;
   }
 }
+
+function setDefaultTiming(position, navigationState) {
+  Animated.spring(
+    position,
+    {
+      bounciness: 0,
+      toValue: navigationState.index,
+    }
+  ).start();
+}
+
+NavigationAnimatedView.defaultProps = {
+  setTiming: setDefaultTiming,
+};
 
 NavigationAnimatedView = NavigationContainer.create(NavigationAnimatedView);
 
