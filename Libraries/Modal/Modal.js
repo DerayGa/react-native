@@ -31,8 +31,6 @@ var RCTModalHostView = requireNativeComponent('RCTModalHostView', null);
  * Navigator instead of Modal. With a top-level Navigator, you have more control
  * over how to present the modal scene over the rest of your app by using the
  * configureScene property.
- *
- * This component is only available in iOS at this time.
  */
 class Modal extends React.Component {
   render(): ?ReactElement {
@@ -77,9 +75,7 @@ var styles = StyleSheet.create({
   },
   container: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
-    right: 0,
     top: 0,
   }
 });
