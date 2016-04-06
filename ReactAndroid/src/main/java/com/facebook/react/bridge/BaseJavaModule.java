@@ -11,6 +11,7 @@ package com.facebook.react.bridge;
 
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.systrace.Systrace;
+import com.facebook.systrace.SystraceMessage;
 
 import javax.annotation.Nullable;
 
@@ -160,6 +161,7 @@ public abstract class BaseJavaModule implements NativeModule {
     private final Object[] mArguments;
     private String mType = METHOD_TYPE_REMOTE;
     private final int mJSArgumentsNeeded;
+    private final String mTraceName;
 
     public JavaMethod(Method method) {
       mMethod = method;
@@ -169,6 +171,7 @@ public abstract class BaseJavaModule implements NativeModule {
       // save to allocate only one arguments object per method that can be reused across calls
       mArguments = new Object[parameterTypes.length];
       mJSArgumentsNeeded = calculateJSArgumentsNeeded();
+      mTraceName = BaseJavaModule.this.getName() + "." + mMethod.getName();
     }
 
     private ArgumentExtractor[] buildArgumentExtractors(Class[] paramTypes) {
@@ -186,7 +189,8 @@ public abstract class BaseJavaModule implements NativeModule {
 
       ArgumentExtractor[] argumentExtractors = new ArgumentExtractor[paramTypes.length - executorTokenOffset];
       for (int i = 0; i < paramTypes.length - executorTokenOffset; i += argumentExtractors[i].getJSArgumentsNeeded()) {
-        Class argumentClass = paramTypes[i + executorTokenOffset];
+        int paramIndex = i + executorTokenOffset;
+        Class argumentClass = paramTypes[paramIndex];
         if (argumentClass == Boolean.class || argumentClass == boolean.class) {
           argumentExtractors[i] = ARGUMENT_EXTRACTOR_BOOLEAN;
         } else if (argumentClass == Integer.class || argumentClass == int.class) {
@@ -202,7 +206,7 @@ public abstract class BaseJavaModule implements NativeModule {
         } else if (argumentClass == Promise.class) {
           argumentExtractors[i] = ARGUMENT_EXTRACTOR_PROMISE;
           Assertions.assertCondition(
-              i == paramTypes.length - 1, "Promise must be used as last parameter only");
+              paramIndex == paramTypes.length - 1, "Promise must be used as last parameter only");
           mType = METHOD_TYPE_REMOTE_ASYNC;
         } else if (argumentClass == ReadableMap.class) {
           argumentExtractors[i] = ARGUMENT_EXTRACTOR_MAP;
@@ -231,7 +235,9 @@ public abstract class BaseJavaModule implements NativeModule {
 
     @Override
     public void invoke(CatalystInstance catalystInstance, ExecutorToken executorToken, ReadableNativeArray parameters) {
-      Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "callJavaModuleMethod");
+      SystraceMessage.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "callJavaModuleMethod")
+          .arg("method", mTraceName)
+          .flush();
       try {
         if (mJSArgumentsNeeded != parameters.size()) {
           throw new NativeArgumentsParseException(
@@ -356,7 +362,7 @@ public abstract class BaseJavaModule implements NativeModule {
   public void onCatalystInstanceDestroy() {
     // do nothing
   }
-  
+
   @Override
   public boolean supportsWebWorkers() {
     return false;
