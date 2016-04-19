@@ -59,6 +59,12 @@ var featured = [
     author: 'Exponent',
   },
   {
+    name: 'Helium',
+    icon: 'http://a1.mzstatic.com/us/r30/Purple49/v4/df/a6/22/dfa622c4-e29c-c720-f32e-3fec99d14337/icon175x175.png',
+    link:  'https://itunes.apple.com/app/id1071378510',
+    author: 'Helium',
+  },
+  {
     name: 'Lrn',
     icon: 'http://is4.mzstatic.com/image/pf/us/r30/Purple1/v4/41/a9/e9/41a9e9b6-7801-aef7-2400-2eca14923321/mzl.adyswxad.png',
     link: 'https://itunes.apple.com/us/app/lrn-learn-to-code-at-your/id1019622677',
@@ -236,6 +242,13 @@ var apps = [
     author: 'Bitt',
   },
   {
+    name: 'Blueprint',
+    icon: 'http://blueprintalpha.com/static/blueprint_appicon.svg',
+    linkAppStore: 'https://itunes.apple.com/us/app/blueprint-alpha/id1058584745?ls=1&mt=8',
+    linkPlayStore: 'https://play.google.com/store/apps/details?id=com.blueprintnative',
+    author: 'Tom Hayden'
+  },
+  {
     name: 'breathe Meditation Timer',
     icon: 'http://a2.mzstatic.com/eu/r30/Purple49/v4/09/21/d2/0921d265-087a-98f0-58ce-bbf9d44b114d/icon175x175.png',
     linkAppStore: 'https://itunes.apple.com/de/app/breathe-meditation-timer/id1087354227?mt=8',
@@ -354,6 +367,12 @@ var apps = [
     icon: 'https://lh3.googleusercontent.com/MCoiCCwUan0dxzqRR_Mrr7kO308roYdI2aTsIpUGYWzUmpJT1-R2_J04weQKFEd3Mg=w300-rw',
     link: 'https://play.google.com/store/apps/details?id=com.arjunkomath.product_hunt&hl=en',
     author: 'Arjun Komath',
+  },
+  {
+    name: 'Finance',
+    icon: 'https://lh3.googleusercontent.com/3VIk0kX6WyaHdQkNJVdFqW6Kn-O-rZ1RUwvu1tjQamRC33ThMIGh3dkRALpSRPjUIw=w300-rw',
+    link: 'https://play.google.com/store/apps/details?id=com.kfpun.finance&hl=en',
+    author: 'kf (@7kfpun)',
   },
   {
     name: 'Fixt',
@@ -732,6 +751,13 @@ var apps = [
     author: 'Moritz Schwörer (@mosch)',
   },
   {
+    name: 'YAMU',
+    icon: 'http://a4.mzstatic.com/us/r30/Purple69/v4/a2/d0/08/a2d0089d-326e-4402-dba2-fd5385e3de65/icon175x175.png',
+    linkAppStore: 'https://itunes.apple.com/us/app/yamu/id686819827?mt=8',
+    linkPlayStore: 'https://play.google.com/store/apps/details?id=org.farook.yamu',
+    author: 'YAMU (Private) Limited (@yamulk)',
+  },
+  {
     name: 'Yoloci',
     icon: 'http://a5.mzstatic.com/eu/r30/Purple7/v4/fa/e5/26/fae52635-b97c-bd53-2ade-89e2a4326745/icon175x175.jpeg',
     link: 'https://itunes.apple.com/de/app/yoloci/id991323225?mt=8',
@@ -793,6 +819,12 @@ var apps = [
     linkAppStore: 'https://itunes.apple.com/us/app/spatula/id1090496189?ls=1&mt=8',
     linkPlayStore: 'https://play.google.com/store/apps/details?id=com.usespatula',
     author: 'Kushal Dave'
+  },
+  {
+    name: 'ShareWis',
+    icon: 'https://s3-ap-northeast-1.amazonaws.com/sw-misc/sharewis3_app.png',
+    link: 'https://itunes.apple.com/jp/app/id585517208',
+    author: 'ShareWis Inc.'
   }
 ];
 
